@@ -1,0 +1,37 @@
+global proc Sample( int $samples )
+{
+    // create some geometry
+    $geom = `polyTorus -ch on -o on -r 6.423435 -sr 1.9`;
+    rotate -r -os -16.783795 59.68335 -30.236706 ;
+    $shape = $geom[0];
+    
+    // create raymarcher sampler
+    $rms = `createNode RaySampler`;
+    setAttr ($rms + ".sc") $samples;
+    connectAttr -f ( $shape + ".worldMesh[0]" ) ( $rms + ".inputMesh" );  
+    
+    // create raymarcher sample preview
+    $rmsp = `createNode SamplePreview`;
+    connectAttr -f ( $rms + ".outSamples" ) ( $rmsp + ".sampleData" );
+    getAttr ($rmsp + ".out" ); // evaluate the preview out attribute to trigger the computation
+    
+    // create voxel sampler
+    $vs = `createNode VoxelSampler`;
+    setAttr ($vs + ".sc") $samples;
+    connectAttr -f ( $shape + ".worldMesh[0]" ) ( $vs + ".inputMesh" ); 
+    
+     // create voxel sample preview
+    $vsp = `createNode SamplePreview`;
+    connectAttr -f ( $vs + ".outSamples" ) ( $vsp + ".sampleData" );
+    getAttr ($vsp + ".out" ); // evaluate the preview out attribute to trigger the computation 
+
+     // create voxel preview
+    $vp = `createNode VoxelPreview`;
+    connectAttr -f ( $vs + ".outVoxels" ) ( $vp + ".voxelData" );
+    getAttr ($vp + ".out" ); // evaluate the preview out attribute to trigger the computation 
+}    
+
+// NOTE: check comment on VoxelShape.cpp >> VoxelShape::compute for further information
+// about how to dump the voxels as maya objects instead of using the GL-based preview node
+
+Sample( 1000 );
