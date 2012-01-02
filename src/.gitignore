@@ -1,0 +1,6 @@
+*.ncb
+*.sln
+*.suo
+.svn
+*.user
+*.vcproj
