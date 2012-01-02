@@ -27,10 +27,21 @@ endif (WIN32)
 set(MAYA_VERSION 2011 CACHE STRING "Maya Version")
 set(MAYA_ARCH x64 CACHE STRING "HW Architecture")
 
+if ( "${MAYA_ARCH}" STREQUAL "x64")
+	set(x64_BUILD true)
+endif()
+
 if(WIN32)
 	set( MAYA_USER_DIR $ENV{USERPROFILE}/Documents/maya CACHE PATH "Maya user home directory" )
-	set( MAYA_ROOT $ENV{PROGRAMFILES}/Autodesk/Maya${MAYA_VERSION} CACHE PATH "Maya installation directory" )
 	set( MAYA_SDK_DEFINITIONS "_AFXDLL;_MBCS;NT_PLUGIN;REQUIRE_IOSTREAM" )
+	if(x64_BUILD)
+		set( MAYA_ROOT $ENV{PROGRAMW6432}/Autodesk/Maya${MAYA_VERSION} CACHE PATH "Maya installation directory" )
+	else()
+		SET(PROGRAMFILESx86 "ProgramFiles(x86)")
+		SET(PF $ENV{${PROGRAMFILESx86}})
+		message("PF " ${PF})
+		set( MAYA_ROOT ${PF}/Autodesk/Maya${MAYA_VERSION} CACHE PATH "Maya installation directory" )	
+	endif()
 
 else()
 	set( MAYA_USER_DIR $ENV{HOME}/maya CACHE PATH "Maya user home directory" )
@@ -49,20 +60,37 @@ set( MAYA_LIBRARY_DIR ${MAYA_ROOT}/lib )
 set ( LOCAL_WARNING_FLAGS /W3 )
 set ( LOCAL_RTTI_FLAGS /GR )
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin/${MAYA_ARCH})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin/${MAYA_ARCH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin/${MAYA_ARCH})
 
 # add base to include directories
 include_directories ( ${PUBLIC_INCLUDE_DIRS} ${MAYA_HEADERS_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIR})
 link_directories ( ${PUBLIC_LIBRARY_DIRS} ${MAYA_LIBRARY_DIR} ${GLEW_LIBRARY_DIR})
 
 set( OPENGL_LIB opengl32.lib glu32.lib)
-set( GLEW_LIB glew32.lib )
 set( MAYA_DEFINITIONS "_AFXDLL,_MBCS,NT_PLUGIN,REQUIRE_IOSTREAM" )
 set( MAYASDK_LIBRARIES "Foundation.lib" "OpenMaya.lib" "OpenMayaUI.lib" "OpenMayaAnim.lib" "OpenMayaFX.lib" "OpenMayaRender.lib" )
 
-#specify app sources
+# 64-bit compilation options
+if (x64_BUILD)
+	message( "64-bit build")
+	set( MAYA_DEFINITIONS ${MAYA_DEFINITIONS},Bits64_ )
+	set( GLEW_LIB glew64.lib )
+	if(UNIX)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
+	endif(UNIX)
+else()
+	message( "32-bit build")
+	set( GLEW_LIB glew32.lib )
+endif()
+
+# print search paths and options
+message("Looking for Maya on " ${MAYA_ROOT})
+message("Looking for GLEW on " ${GLEW_DIR})
+message("Compiling for Maya" ${MAYA_VERSION}-${MAYA_ARCH} )
+
+# specify app sources
 file(GLOB_RECURSE SOURCE_FILES src/*.c src/*.cpp src/*.h src/*.inl src/*.hpp src/*.glsl src/*.ui)
 
 add_library( ${MAYA_PLUGIN_NAME} SHARED ${SOURCE_FILES} )

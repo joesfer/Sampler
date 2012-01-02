@@ -47,7 +47,14 @@ Compilation:
 		cd <sampler_folder>
 		mkdir .build
 		cd .build
-		cmake ..
+		
+		e.g. To compile for 32-bit maya under Windows using Visual Studio 2008
+		
+			cmake -G "Visual Studio 9 2008" -DMAYA_ARCH=x86 ..
+		
+		e.g. Compile for 64-bit maya under Windows using Visual Studio 2008 x64
+
+			cmake -G "Visual Studio 9 2008 Win64" -DMAYA_ARCH=x64 ..
 		
 		Under windows: cmake will generate a Visual studio solution on .build
 		Under linux: cmake will generate a GCC makefile
